@@ -1,0 +1,40 @@
+{
+  "name": "@dependahub/aws-s3",
+  "version": "0.0.0",
+  "description": "AWS S3 操作モジュール",
+  "license": "MIT",
+  "author": "DependaHub",
+  "types": "@types/index.d.ts",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "xo && ava",
+    "build": "rm -rf @types && tsc"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.782.0",
+    "@aws-sdk/credential-providers": "^3.782.0"
+  },
+  "devDependencies": {
+    "ava": "^6.2.0",
+    "typescript": "^5.8.3",
+    "xo": "^0.60.0"
+  },
+  "homepage": "https://github.com/dependahub/aws-s3#readme",
+  "bugs": {
+    "url": "https://github.com/dependahub/aws-s3/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dependahub/aws-s3.git"
+  },
+  "keywords": [
+    "aws",
+    "s3"
+  ],
+  "xo": {
+    "rules": {
+      "capitalized-comments": "off"
+    }
+  }
+}
