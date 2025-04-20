@@ -1,6 +1,6 @@
 {
   "name": "@dependahub/aws-s3",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "AWS S3 操作モジュール",
   "license": "MIT",
   "author": "DependaHub",
