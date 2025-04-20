@@ -1,6 +1,6 @@
 {
   "name": "@dependahub/aws-s3",
-  "version": "0.0.0",
+  "version": "0.9.0",
   "description": "AWS S3 操作モジュール",
   "license": "MIT",
   "author": "DependaHub",
@@ -33,6 +33,9 @@
     "s3"
   ],
   "xo": {
+    "ignore": [
+      "@types"
+    ],
     "rules": {
       "capitalized-comments": "off"
     }

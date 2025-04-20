@@ -8,31 +8,61 @@ import {
 } from '@aws-sdk/client-s3';
 import {fromIni} from '@aws-sdk/credential-providers';
 
-/**
- * S3クライアントのラッパークラスです。
- * - 複数リージョンをまたいで操作する場合は、複数のS3Clientを生成してください。
- */
-export class S3Class {
-	#client = new S3Client();
+class S3 {
+	/** @type {S3Client} */
+	#client;
 
 	/**
-	 * S3Clientを再設定します。
+	 * 初期化
 	 * @param {object} config
-	 * @param {string} config.region
-	 * @param {string} [config.profile='default'] - AWS CLIのプロファイル名
+	 * @param {string!} config.region (Optional) AWSリージョン名
+	 * @param {string!} config.profile (Optional) AWS CLIのプロファイル名
+	 * @returns {void}
+	 */
+	constructor(config = {}) {
+		this.configure(config);
+	}
+
+	/**
+	 * S3Clientを設定します。
+	 * @param {object} config
+	 * @param {string!} config.region (Optional) AWSリージョン名
+	 * @param {string!} config.profile (Optional) AWS CLIのプロファイル名
+	 * @returns {void}
 	 */
 	configure(config = {}) {
-		const {region, profile = 'default'} = config;
-		this.#client = new S3Client({
-			region,
-			credentials: fromIni({profile}),
-		});
+		const {region, profile} = config;
+		const S3Config = {
+			region: undefined,
+			credentials: undefined,
+		};
+		if (region) {
+			S3Config.region = region;
+		}
+
+		if (profile) {
+			S3Config.credentials = fromIni({profile});
+		}
+
+		this.#client = new S3Client(S3Config);
+	}
+
+	/**
+	 * 新しいインスタンスを生成します。
+	 * - profile、リージョンの異なるS3を操作する場合に使用します。
+	 * @param {object} config
+	 * @param {string!} config.region (Optional) AWSリージョン名
+	 * @param {string!} config.profile (Optional) AWS CLIのプロファイル名
+	 * @returns {S3}
+	 */
+	createClient(config = {}) {
+		return new S3(config);
 	}
 
 	/**
 	 * 保管されているファイル名の一覧を取得します。
 	 * @param {object} options
-	 * @param {string} options.bucket
+	 * @param {string} options.bucket S3バケット名
 	 * @param {string} options.prefix S3キーのの前方一致絞り込み
 	 * @param {number} options.limit 取得する最大数
 	 * @param {string} options.nextToken 続きの取得トークン
@@ -198,7 +228,6 @@ export class S3Class {
 
 /**
  * S3クライアントのインスタンスです。
- * - 複数リージョンをまたいで操作する場合は、S3Classから生成してください。
  */
-export const s3 = new S3Class();
+export const s3 = new S3();
 export default s3;
