@@ -13,6 +13,11 @@ s3.configure({
   region: 'ap-northeast-1',
 });
 
+// profile/リージョンの異なるS3を操作する場合は別のインスタンスを作成して下さい。
+const s3Oregon = s3.createClient({
+  region: 'us-west-2',
+});
+
 // ファイル名一覧取得
 const files = await s3.index({
   bucket: 'some-bucket',
