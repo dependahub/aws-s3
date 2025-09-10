@@ -16,6 +16,7 @@
     "@aws-sdk/credential-providers": "^3.782.0"
   },
   "devDependencies": {
+    "@types/node": "^24.3.1",
     "ava": "^6.2.0",
     "typescript": "^5.8.3",
     "xo": "^0.60.0"

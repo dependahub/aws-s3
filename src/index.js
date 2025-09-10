@@ -1,68 +1,62 @@
 import {
 	S3Client,
-	ListObjectsV2Command,
 	GetObjectCommand,
 	PutObjectCommand,
-	CopyObjectCommand,
+	ListObjectsV2Command,
 	DeleteObjectCommand,
+	CopyObjectCommand,
 } from '@aws-sdk/client-s3';
 import {fromIni} from '@aws-sdk/credential-providers';
 
-class S3 {
+/**
+ * S3クライアントのラッパークラスです。
+ * - 複数リージョンをまたいで操作する場合は、複数のS3Clientを生成してください。
+ */
+export class S3Class {
 	/** @type {S3Client} */
 	#client;
 
-	/**
-	 * 初期化
-	 * @param {object} config
-	 * @param {string!} config.region (Optional) AWSリージョン名
-	 * @param {string!} config.profile (Optional) AWS CLIのプロファイル名
-	 * @returns {void}
-	 */
-	constructor(config = {}) {
-		this.configure(config);
+	constructor() {
+		this.configure();
 	}
 
 	/**
-	 * S3Clientを設定します。
+	 * S3Clientを再設定します。
 	 * @param {object} config
-	 * @param {string!} config.region (Optional) AWSリージョン名
-	 * @param {string!} config.profile (Optional) AWS CLIのプロファイル名
-	 * @returns {void}
+	 * @param {string | undefined} [config.region]
+	 * @param {string | undefined} [config.profile] - AWS CLIのプロファイル名
 	 */
 	configure(config = {}) {
 		const {region, profile} = config;
-		const S3Config = {
-			region: undefined,
+		const s3Config = {
+			region,
 			credentials: undefined,
 		};
-		if (region) {
-			S3Config.region = region;
-		}
 
 		if (profile) {
-			S3Config.credentials = fromIni({profile});
+			s3Config.credentials = fromIni({profile});
 		}
 
-		this.#client = new S3Client(S3Config);
+		this.#client = new S3Client(s3Config);
 	}
 
 	/**
-	 * 新しいインスタンスを生成します。
-	 * - profile、リージョンの異なるS3を操作する場合に使用します。
+	 * 新しいS3Classのインスタンスを生成します。
 	 * @param {object} config
-	 * @param {string!} config.region (Optional) AWSリージョン名
-	 * @param {string!} config.profile (Optional) AWS CLIのプロファイル名
-	 * @returns {S3}
+	 * @param {string | undefined} [config.region]
+	 * @param {string | undefined} [config.profile] - AWS CLIのプロファイル
+	 * @returns {S3Class}
 	 */
-	createClient(config = {}) {
-		return new S3(config);
+	createInstance(config = {}) {
+		const instance = new S3Class();
+		instance.configure(config);
+		return instance;
 	}
 
 	/**
 	 * 保管されているファイル名の一覧を取得します。
 	 * @param {object} options
-	 * @param {string} options.bucket S3バケット名
+	 * @param {string} options.bucket
 	 * @param {string} options.prefix S3キーのの前方一致絞り込み
 	 * @param {number} options.limit 取得する最大数
 	 * @param {string} options.nextToken 続きの取得トークン
@@ -110,12 +104,15 @@ class S3 {
 
 	/**
 	 * 指定したファイルを取得します。
+	 * - 指定したファイルが無い場合は、nullを返します。
+	 * - ほとんどのファイルは文字列として取得できますが、zipファイルなどバイナリデータで取得しないと開けない場合は、```type: 'binary'```を指定してください。
 	 * @param {object} input
 	 * @param {string} input.bucket
 	 * @param {string} input.key
-	 * @returns {Promise<import('@aws-sdk/client-s3').GetObjectCommandOutput>}
+	 * @param {'string' | 'binary'} [input.type='string'] 取得するデータ型（default=string）
+	 * @returns {Promise<null|string|Uint8Array>} ファイルの内容
 	 */
-	async get({bucket, key}) {
+	async get({bucket, key, type = 'string'}) {
 		if (!bucket) {
 			throw new Error('bucket is required');
 		}
@@ -124,14 +121,23 @@ class S3 {
 			throw new Error('key is required');
 		}
 
-		const response = await this.#client.send(new GetObjectCommand({
-			Bucket: bucket,
-			Key: key,
-		}));
+		try {
+			const response = await this.#client.send(new GetObjectCommand({
+				Bucket: bucket,
+				Key: key,
+			}));
+			if (type === 'binary') {
+				return response.Body?.transformToByteArray();
+			}
 
-		const string = await response.Body?.transformToString();
+			return response.Body?.transformToString();
+		} catch (error) {
+			if (error.Code === 'NoSuchKey') {
+				return null;
+			}
 
-		return string;
+			throw error;
+		}
 	}
 
 	/**
@@ -139,7 +145,7 @@ class S3 {
 	 * @param {object} input
 	 * @param {string} input.bucket
 	 * @param {string} input.key
-	 * @param {File} input.file
+	 * @param {Uint8Array|File} input.file
 	 * @param {Record<string, any>} input.metadata
 	 * @returns {Promise<import('@aws-sdk/client-s3').PutObjectOutput>}
 	 */
@@ -156,10 +162,15 @@ class S3 {
 			throw new Error('file is required');
 		}
 
+		let Body = file;
+		if (file instanceof File) {
+			Body = await file.arrayBuffer();
+		}
+
 		const response = await this.#client.send(new PutObjectCommand({
 			Bucket: bucket,
 			Key: key,
-			Body: await file.arrayBuffer(),
+			Body,
 			Metadata: metadata,
 		}));
 
@@ -228,6 +239,6 @@ class S3 {
 
 /**
  * S3クライアントのインスタンスです。
+ * - 複数リージョンをまたいで操作する場合は、S3Classから生成してください。
  */
-export const s3 = new S3();
-export default s3;
+export const s3 = new S3Class();
