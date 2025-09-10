@@ -13,6 +13,9 @@
 		"moduleResolution": "nodenext",
 		"target": "ESNext",
 		"module": "NodeNext",
+		"types": [
+			"node"
+		],
 		"lib": [
 			"esnext"
 		],
