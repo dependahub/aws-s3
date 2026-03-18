@@ -1,5 +1,6 @@
 import {
 	S3Client,
+	HeadObjectCommand,
 	GetObjectCommand,
 	PutObjectCommand,
 	ListObjectsV2Command,
@@ -100,6 +101,39 @@ export class S3Class {
 		});
 
 		return response.KeyCount > 0;
+	}
+
+	/**
+	 * 指定したファイルのメタデータを取得します。
+	 * - 指定したファイルが無い場合は、nullを返します。
+	 * @param {object} input
+	 * @param {string} input.bucket
+	 * @param {string} input.key
+	 * @returns {Promise<import('@aws-sdk/client-s3').HeadObjectCommandOutput|null>} ファイルのメタデータ
+	 */
+	async head({bucket, key}) {
+		if (!bucket) {
+			throw new Error('bucket is required');
+		}
+
+		if (!key) {
+			throw new Error('key is required');
+		}
+
+		try {
+			const response = await this.#client.send(new HeadObjectCommand({
+				Bucket: bucket,
+				Key: key,
+			}));
+
+			return response;
+		} catch (error) {
+			if (error.Code === 'NotFound') {
+				return null;
+			}
+
+			throw error;
+		}
 	}
 
 	/**

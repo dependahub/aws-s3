@@ -33,6 +33,12 @@ const isExist = await s3.exists({
   key: 'filePath',
 });
 
+// ファイルメタデータの取得
+const file = await s3.head({
+  bucket: 'some-bucket',
+  key: 'filePath',
+});
+
 // ファイル内容の取得
 const file = await s3.get({
   bucket: 'some-bucket',
