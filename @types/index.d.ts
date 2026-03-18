@@ -51,6 +51,18 @@ export class S3Class {
         key: string;
     }): Promise<boolean>;
     /**
+     * 指定したファイルのメタデータを取得します。
+     * - 指定したファイルが無い場合は、nullを返します。
+     * @param {object} input
+     * @param {string} input.bucket
+     * @param {string} input.key
+     * @returns {Promise<import('@aws-sdk/client-s3').HeadObjectCommandOutput|null>} ファイルのメタデータ
+     */
+    head({ bucket, key }: {
+        bucket: string;
+        key: string;
+    }): Promise<import("@aws-sdk/client-s3").HeadObjectCommandOutput | null>;
+    /**
      * 指定したファイルを取得します。
      * - 指定したファイルが無い場合は、nullを返します。
      * - ほとんどのファイルは文字列として取得できますが、zipファイルなどバイナリデータで取得しないと開けない場合は、```type: 'binary'```を指定してください。
